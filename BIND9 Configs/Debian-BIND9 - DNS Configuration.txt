@@ -1,0 +1,50 @@
+sudo apt-get install bind9
+
+sudo mkdir /var/log/collector-bind
+sudo touch /var/log/collector-bind/debug.log
+sudo touch /var/log/collector-bind/query.log
+
+sudo chown root:adm /var/log/collector-bind
+sudo chown root:adm /var/log/collector-bind/debug.log
+sudo chown root:adm /var/log/collector-bind/query.log
+
+sudo chmod 666 /var/log/collector-bind/debug.log
+sudo chmod 666 /var/log/collector-bind/query.log
+
+Add to /etc/bind/named.conf
+
+logging {
+
+    channel debug_log {
+        file "/var/log/collector-bind/debug.log";
+        severity debug 3;
+        print-category yes;
+        print-severity yes;
+        print-time yes;
+    };
+
+    channel query_log {
+        file "/var/log/collector-bind/query.log";
+        severity dynamic;
+        print-category yes;
+        print-severity yes;
+        print-time yes;
+    };
+
+    category resolver { debug_log; };
+    category security { debug_log; }; 
+    category queries { query_log; };
+   
+};
+
+Add to /etc/bind/named.conf.options
+	forwarders {
+	 	8.8.8.8; // Or the Organization DNS servers
+	};
+
+	
+sudo service bind9 restart
+
+// Ignore
+//tail -f query.log | awk '{print $6" "$1" "$2" "$8 }'
+

@@ -1,0 +1,58 @@
+As root install bind package
+=====================
+yum install bind
+
+As root create needed directory structure
+================================
+mkdir /var/log/collector-bind
+touch /var/log/collector-bind/debug.log
+touch /var/log/collector-bind/query.log
+
+chown root:adm /var/log/collector-bind
+chown root:adm /var/log/collector-bind/debug.log
+chown root:adm /var/log/collector-bind/query.log
+
+chmod 666 /var/log/collector-bind/debug.log
+chmod 666 /var/log/collector-bind/query.log
+
+
+Add to /etc/named.conf under logging
+=============================
+    channel debug_log {
+        file "/var/log/collector-bind/debug.log";
+        severity debug 3;
+        print-category yes;
+        print-severity yes;
+        print-time yes;
+    };
+
+    channel query_log {
+        file "/var/log/collector-bind/query.log";
+        severity dynamic;
+        print-category yes;
+        print-severity yes;
+        print-time yes;
+    };
+
+    category resolver { debug_log; };
+    category security { debug_log; }; 
+    category queries { query_log; };
+   
+
+Add to /etc/named.conf under options
+=============================
+	forwarders {
+	 	8.8.8.8; // Or the Organization DNS servers
+	};
+
+
+Turn service on and starting the service
+============================== 	
+chkconfig named on
+service bind restart
+
+
+Check log using
+=============
+tail -f /var/log/collector-bind/query.log | awk '{print $6" "$1" "$2" "$8 }'
+
