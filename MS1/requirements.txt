@@ -1,0 +1,7 @@
+lxml==3.3.4
+pyinotify==0.9.4
+python-awis==1.0
+requests==2.2.1
+wsgiref==0.1.2
+xmltodict==0.8.7
+pymongo

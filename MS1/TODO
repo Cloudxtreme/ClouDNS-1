@@ -1,0 +1,39 @@
+Hi,
+
+these steps are needed for testing the code:
+
+==== DEBIAN 7.3 ====
+- sudo ./uninstall.sh (to clean up the old files)
+- edit the domaininfo.conf
+- sudo ./install.sh
+- sudo touch /var/log/named.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
+- sudo cat test.txt >> /var/log/named.log
+- wait 1-2 mins (probably the requests will run under couple of secs, just for safety)
+- check the results, logs
+- delete the JSON files from the result - to test the data checker
+- wait at least 5 mins (it's hardcoded in data checker to prevent unnecessary requests)
+- sudo python2 domaininfo_datacheck.py (or wait for the cronjob)
+- check the results, logs again
+- sudo ./uninstall.sh
+
+==== CentOS (RHEL) 6.5 ====
+- install pip from EPEL repository
+- sudo ./uninstall.sh (to clean up the old files)
+- edit the domaininfo.conf
+- sudo ./install.sh
+- sudo touch /var/log/named.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
+- sudo cat test.txt >> /var/log/named.log
+- wait 1-2 mins (probably the requests will run under couple of secs, just for safety)
+- check the results, logs
+- delete the JSON files from the result - to test the data checker
+- wait at least 5 mins (it's hardcoded in data checker to prevent unnecessary requests)
+- sudo python2 domaininfo_datacheck.py (or wait for the cronjob)
+- check the results, logs again
+- sudo ./uninstall.sh
+
+== About the data checker ==
+I wrote it because network outage / provider error could happen and some data will be missing.
+It checks the result directory for every data dir which is 'older' than 5 mins and looks for JSON files for every service.
+If something's missing then it tries to download it again.
+It runs only if domaininfo daemon is running - but it's started by cron regardless the domaininfo status.
+It's installed like a cronjob and it runs in every 15 mins (00, 15, 30, 45 mins. in every hour).

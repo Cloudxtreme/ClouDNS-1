@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+# chkconfig: 345 66 66
+# description: domaininfo daemon
+#
+# processname: domaininfo
+# config: /etc/domaininfo.conf
+# pidfile: /var/run/domaininfo.pid
+
+### BEGIN INIT INFO
+# Provides:          domaininfo
+# Required-Start:    $local_fs $network $syslog
+# Required-Stop:     $local_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Domain info collector
+# Description:       Collects information about domains based on BIND log
+### END INIT INFO
+
+# Get function from functions library
+. /etc/init.d/functions
+
+DAEMON=/usr/local/sbin/domaininfo
+NAME=domaininfo
+PIDFILE=/var/run/domaininfo.pid
+
+# Start the service domaininfo
+start() {
+        # Return
+        #   0 if daemon has been started
+        #   1 if daemon was already running
+
+        if [ -f $PIDFILE ]; then
+            echo -n " : already running"
+            return 1
+        else
+            $DAEMON start
+            return 0
+        fi
+}
+
+# Stop the service domaininfo
+stop() {
+        # Return
+        #   0 if daemon has been stopped
+        #   1 if daemon was already stopped
+
+        if [ -f $PIDFILE ]; then
+            $DAEMON stop
+            return 0
+        else
+            echo -n " : not running"
+            return 1
+        fi
+}
+
+### main logic ###
+case "$1" in
+  start)
+        echo -n "Starting $NAME"
+        start
+        case "$?" in
+		    0) success ;;
+		    1) failure ;;
+	    esac
+	    echo
+        ;;
+  stop)
+        echo -n "Stopping $NAME"
+        stop
+        case "$?" in
+		    0) success ;;
+		    1) failure ;;
+	    esac
+	    echo
+        ;;
+  status)
+        status domaininfo
+        ;;
+  restart|reload|condrestart)
+        stop
+        start
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+exit 0
