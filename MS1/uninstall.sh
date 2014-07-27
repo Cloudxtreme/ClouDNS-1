@@ -63,15 +63,18 @@ check "rm /etc/init.d/MongoConnector"
 echo
 echo -n "domaininfo: remove daemon ... "
 check "rm /usr/local/sbin/domaininfo"
+check "rm /usr/local/sbin/MongoConnector"
 
 
 echo
 echo -n "domaininfo: remove config file ... "
 check "rm /etc/domaininfo.conf"
 
+
 echo
 echo -n "domaininfo: remove logs ... "
 check "rm /var/log/domaininfo*"
+
 
 echo
 echo "domaininfo: uninstall script done."

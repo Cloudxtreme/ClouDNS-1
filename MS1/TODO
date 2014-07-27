@@ -6,8 +6,8 @@ these steps are needed for testing the code:
 - sudo ./uninstall.sh (to clean up the old files)
 - edit the domaininfo.conf
 - sudo ./install.sh
-- sudo touch /var/log/named.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
-- sudo cat test.txt >> /var/log/named.log
+- sudo touch /var/log/named/query.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
+- sudo cat test.txt >> /var/log/named/query.log
 - wait 1-2 mins (probably the requests will run under couple of secs, just for safety)
 - check the results, logs
 - delete the JSON files from the result - to test the data checker
@@ -21,8 +21,8 @@ these steps are needed for testing the code:
 - sudo ./uninstall.sh (to clean up the old files)
 - edit the domaininfo.conf
 - sudo ./install.sh
-- sudo touch /var/log/named.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
-- sudo cat test.txt >> /var/log/named.log
+- sudo touch /var/log/named/query.log - ONLY IF IT'S NOT EXISTING (or change the bind_log_path settings in the config file)
+- sudo cat test.txt >> /var/log/named/query.log
 - wait 1-2 mins (probably the requests will run under couple of secs, just for safety)
 - check the results, logs
 - delete the JSON files from the result - to test the data checker

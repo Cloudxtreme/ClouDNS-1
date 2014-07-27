@@ -4,14 +4,12 @@ from __future__ import print_function
 import MongoConnector
 import ConfigParser
 import atexit
-import json
 import logging
 import re
 import os
 import signal
 import sys
 import time
-from threading import Thread
 import awis
 import pyinotify
 import xmltodict
@@ -75,11 +73,9 @@ def daemonize(pidfile, stdin='/dev/null',
     signal.signal(signal.SIGTERM, sigterm_handler)
 
 
-
 def main():
     sys.stdout.write('%s Daemon started with pid %d\n' % (time.ctime(),
                                                           os.getpid()))
-
     # READ Config file
     config = ConfigParser.ConfigParser()
     config.read('/etc/domaininfo.conf')
@@ -105,18 +101,30 @@ def main():
     global db_client
     db_ip = config.get('db', 'mongo_ip')
     db_port = config.get('db', 'mongo_port')
-    db_user = config.get('db', 'mongo_user')
-    db_pass = config.get('db', 'mongo_pass')
+    db_use_auth = config.get('db', 'use_auth')
+    # Check if DB Connection auth is requiered
+    if db_use_auth is True:
+        db_user = config.get('db', 'mongo_user')
+        db_pass = config.get('db', 'mongo_pass')
+    else:
+        db_user = None
+        db_pass = None
+
+    logging.debug('Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
 
     db_client = MongoConnector.MongoConnector()
-    db_client.init_connection(db_ip, int(db_port))
-    # db_client.init_connection(db_ip, db_port, db_user, db_pass)
+    db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
+
+    # Check if DB connection was successful
+    if db_client.is_alive() is False:
+        logging.error("DBConnection:: An error Occurred during DB Connection...")
+        raise SystemExit(1)
 
     # Start Reading BIND9 log file
     global fp
     fp = open(bind9_log_file, 'r')
     if not fp:
-        logging.error('No log file found, exiting.')
+        logging.error('BIND9 LogFile:: No log file found, exiting.')
         raise SystemExit(1)
     fp.seek(0, 2)
 
@@ -130,24 +138,26 @@ def main():
         if result:
             timestamp, source_ip, domain, _ = result.groups()
         else:
-            logging.error('Failed to analyze line: %s with current RegExp.' % line)
+            logging.error('BIND9 LogFile:: Failed to analyze line: %s with current RegExp.' % line)
             return
 
         # Build request JSON...
         json_dns_query = {'Client': client_name, 'Domain': domain, 'Source IP': source_ip, 'Timestamp': timestamp}
         logging.debug(json_dns_query)
 
+        ######## Add Threads Support while insert data to DB #################
         #t = Thread(target=handle_query, args=json_dns_query)
         #t.start()
         #logging.debug('Thread started with domain: %s.' % domain)
 
+        ######## Add DB Connection Monitoring to prevent data loss #################
         # Check if DB connection was created...
-        if db_client.is_connected() is True:
-            query_id = db_client.insert_dns_query(json_dns_query)
-            logging.debug("New Query ID: %s" % query_id)
-        else:
-            json.dumps(json_dns_query, sort_keys=True,
-                       indent=4, separators=(',', ': '))
+        #if db_client.is_connected() is True:
+        query_id = db_client.insert_dns_query(json_dns_query)
+        logging.debug("BIND9 LogFile:: New Query ID: %s" % query_id)
+        #else:
+        #    json.dumps(json_dns_query, sort_keys=True,
+        #               indent=4, separators=(',', ': '))
 
     # Event handlers
     class PTmp(pyinotify.ProcessEvent):
