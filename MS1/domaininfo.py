@@ -118,7 +118,7 @@ def main():
 
     logging.debug('Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
 
-    db_client = CMongoConnector()
+    db_client = CMongoConnector(logging)
     conn_status = db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
     if conn_status is False:
         logging.error("DBConnection:: An error Occurred during DB Connection Initiation...")
