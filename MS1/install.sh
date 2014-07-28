@@ -57,6 +57,7 @@ echo
 echo  -n "domaininfo: copy config file ... "
 check "cp domaininfo.conf /etc/"
 
+
 echo
 echo  "domaininfo: copy daemon"
 echo -n "   *  add permission ... "
@@ -64,7 +65,7 @@ check "chmod a+x domaininfo.py"
 check "chmod a+x MongoConnector.py"
 echo -n "   *  copy files to its destination folder ... "
 check "cp domaininfo.py /usr/local/sbin/domaininfo"
-check "cp MongoConnector.py /usr/local/sbin/MongoConnector"
+check "cp MongoConnector.py /usr/local/sbin/MongoConnector.py"
 
 echo
 echo  "domaininfo: install init script"

@@ -50,20 +50,16 @@ echo  "domaininfo: uninstall init script"
 echo -n "   *  remove from init system ... "
 if [ $DISTRO = "debian" ]; then
     check "insserv -r /etc/init.d/domaininfo"
-    check "insserv -r /etc/init.d/MongoConnector"
 else
     check "chkconfig --del domaininfo"
-    check "chkconfig --del MongoConnector"
 fi
 echo -n "   *  delete the init script ..."
 check "rm /etc/init.d/domaininfo"
-check "rm /etc/init.d/MongoConnector"
-
 
 echo
 echo -n "domaininfo: remove daemon ... "
 check "rm /usr/local/sbin/domaininfo"
-check "rm /usr/local/sbin/MongoConnector"
+check "rm /usr/local/sbin/MongoConnector.py"
 
 
 echo

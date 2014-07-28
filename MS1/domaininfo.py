@@ -1,12 +1,17 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function
-import MongoConnector
+import os
+try:
+    from MongoConnector import CMongoConnector
+except ImportError:
+    import imp
+    imp.load_source('MongoConnector', os.getcwd())
+    from MongoConnector import CMongoConnector
 import ConfigParser
 import atexit
 import logging
 import re
-import os
 import signal
 import sys
 import time
@@ -77,6 +82,7 @@ def main():
     sys.stdout.write('%s Daemon started with pid %d\n' % (time.ctime(),
                                                           os.getpid()))
     # READ Config file
+    logging.debug('Starts Reading Config File...')
     config = ConfigParser.ConfigParser()
     config.read('/etc/domaininfo.conf')
     if not config.sections():
@@ -112,8 +118,11 @@ def main():
 
     logging.debug('Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
 
-    db_client = MongoConnector.MongoConnector()
-    db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
+    db_client = CMongoConnector()
+    conn_status = db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
+    if conn_status is False:
+        logging.error("DBConnection:: An error Occurred during DB Connection Initiation...")
+        raise SystemExit(1)
 
     # Check if DB connection was successful
     if db_client.is_alive() is False:

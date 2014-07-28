@@ -3,7 +3,7 @@ from pymongo import MongoClient
 import logging
 
 
-class MongoConnector:
+class CMongoConnector(object):
     def __init__(self):
         logging.debug('Init MongoConnector Class')
         self.mongo_client = None
@@ -11,7 +11,6 @@ class MongoConnector:
         self.db_collection = None
         self.connection_status = False
 
-    #@staticmethod
     def init_connection(self, ip, port, user=None, password=None):
         # connect to DB server
         logging.debug('Connect to MongoDB at:%s:%s' % (ip, port))
@@ -21,8 +20,8 @@ class MongoConnector:
             return False
 
         #Authenticate to Server
-        logging.debug('Authenticating...')
         if (user is not None) and (password is not None):
+            logging.debug('Authenticating...')
             auth_succeeded = self.mongo_client.ClouDNS.authenticate(user, password)
             if auth_succeeded is False:
                 logging.error('Authentication Failed...')
