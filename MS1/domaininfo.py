@@ -81,8 +81,9 @@ def daemonize(pidfile, stdin='/dev/null',
 def main():
     sys.stdout.write('%s Daemon started with pid %d\n' % (time.ctime(),
                                                           os.getpid()))
+    sys.stdout.write('Starts Reading Config File...')
+
     # READ Config file
-    logging.debug('Starts Reading Config File...')
     config = ConfigParser.ConfigParser()
     config.read('/etc/domaininfo.conf')
     if not config.sections():
@@ -93,15 +94,17 @@ def main():
     # Read General Config data
     client_name = config.get('general', 'client_name')
 
-    # Setup logging files and format
-    bind9_log_file = config.get('daemon', 'bind_log_path')
-
-    debug_enabled = config.getboolean('daemon', 'debug')
+    # Read Logging configurations
+    log_file_path = config.get('logging', 'log_file_path')
     log_format = '%(asctime)s: %(levelname)s - %(message)s'
+    debug_enabled = config.getboolean('logging','logger_debug')
     if debug_enabled:
-        logging.basicConfig(level=logging.DEBUG, format=log_format)
+        logging.basicConfig(filename=log_file_path, level=logging.DEBUG, format=log_format)
     else:
-        logging.basicConfig(level=logging.ERROR, format=log_format)
+        logging.basicConfig(filename=log_file_path, level=logging.ERROR, format=log_format)
+
+    # Read BIND9 Log File Path
+    bind9_log_path = config.get('daemon', 'bind9_log_path')
 
     # Setup DB Connection
     global db_client
@@ -116,24 +119,24 @@ def main():
         db_user = None
         db_pass = None
 
-    logging.debug('Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
+    logging.debug('Main::Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
 
     db_client = CMongoConnector()
     conn_status = db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
     if conn_status is False:
-        logging.error("DBConnection:: An error Occurred during DB Connection Initiation...")
+        logging.error("Main::DBConnection:: An error Occurred during DB Connection Initiation...")
         raise SystemExit(1)
 
     # Check if DB connection was successful
     if db_client.is_alive() is False:
-        logging.error("DBConnection:: An error Occurred during DB Connection...")
+        logging.error("Main::DBConnection:: An error Occurred during DB Connection...")
         raise SystemExit(1)
 
     # Start Reading BIND9 log file
     global fp
-    fp = open(bind9_log_file, 'r')
+    fp = open(bind9_log_path, 'r')
     if not fp:
-        logging.error('BIND9 LogFile:: No log file found, exiting.')
+        logging.error('Main::BIND9 LogFile:: No log file found, exiting.')
         raise SystemExit(1)
     fp.seek(0, 2)
 
@@ -149,7 +152,7 @@ def main():
         if result:
             timestamp, source_ip, domain, _ = result.groups()
         else:
-            logging.error('BIND9 LogFile:: Failed to analyze line: %s with current RegExp.' % line)
+            logging.error('Main::BIND9 LogFile:: Failed to analyze line: %s with current RegExp.' % line)
             return
 
         # Build request JSON...
@@ -165,16 +168,16 @@ def main():
         # Check if DB connection was created...
         #if db_client.is_connected() is True:
         query_id = db_client.insert_dns_query(json_dns_query)
-        logging.debug("BIND9 LogFile:: New Query ID: %s" % query_id)
-        #else:
-        #    json.dumps(json_dns_query, sort_keys=True,
-        #               indent=4, separators=(',', ': '))
+        if query_id is not  None:
+            logging.debug("Main:: New Query ID: %s" % query_id)
+        else:
+            logging.error("Main:: Failed to insert: %s" % json_dns_query)
 
     # Event handlers
     class PTmp(pyinotify.ProcessEvent):
         #File was modified
         def process_IN_MODIFY(self, event):
-            if bind9_log_file not in os.path.join(event.path, event.name):
+            if bind9_log_path not in os.path.join(event.path, event.name):
                 return
             else:
                 global fp
@@ -186,11 +189,11 @@ def main():
 
         #Subfile was created
         def process_IN_CREATE(self, event):
-            if bind9_log_file in os.path.join(event.path, event.name):
+            if bind9_log_path in os.path.join(event.path, event.name):
                 global fp
                 if fp:
                     fp.close()
-                fp = open(bind9_log_file, 'r')
+                fp = open(bind9_log_path, 'r')
                 for line in fp.readlines():
                     process(line.rstrip())
                 # Jump to the end, wait for more IN_MODIFY events
@@ -199,8 +202,8 @@ def main():
 
     notifier = pyinotify.Notifier(wm, PTmp())
     # Watch out for logrotate
-    index = bind9_log_file.rfind('/')
-    wm.add_watch(bind9_log_file[:index], dirmask)
+    index = bind9_log_path.rfind('/')
+    wm.add_watch(bind9_log_path[:index], dirmask)
 
     while True:
         notifier.process_events()
@@ -220,10 +223,11 @@ if __name__ == '__main__':
         raise SystemExit(1)
 
     if sys.argv[1] == 'start':
+        ### Add support of get config file path as arg ###
         try:
             daemonize(PIDFILE,
                       stdout='/var/log/domaininfo.log',
-                      stderr='/var/log/domaininfo.err')
+                      stderr='/var/log/domaininfo.log')
         except RuntimeError as e:
             print(e, file=sys.stderr)
             raise SystemExit(1)
