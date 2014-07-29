@@ -118,7 +118,7 @@ def main():
 
     logging.debug('Following DB Details: %s@%s, Auth:%s, %s@%s' % (db_ip, db_port, db_use_auth, db_user, db_pass))
 
-    db_client = CMongoConnector(logging)
+    db_client = CMongoConnector()
     conn_status = db_client.init_connection(db_ip, int(db_port), db_user, db_pass)
     if conn_status is False:
         logging.error("DBConnection:: An error Occurred during DB Connection Initiation...")
@@ -140,8 +140,10 @@ def main():
     wm = pyinotify.WatchManager()
     dirmask = pyinotify.IN_MODIFY | pyinotify.IN_DELETE | pyinotify.IN_MOVE_SELF | pyinotify.IN_CREATE
 
-    # Process Log line
+    # Process a Single Log line
     def process(line):
+        # Regexp looking for the following pattern:
+        #           "[Timestamp] queries: info: client [Source_IP]#49875: query: [DNS] IN A + (188.226.247.164)"
         REGEXP = r'(\d{2}-[A-Za-z]{3}-\d{4}\s\d{2}:\d{2}:\d{2}\.\d+)\D+(\d+\.\d+\.\d+\.\d+)#\d+.*\s(([a-zA-Z0-9-]+\.)+[a-zA-Z]+).*'
         result = re.match(REGEXP, line)
         if result:

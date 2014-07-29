@@ -45,6 +45,10 @@ Add to /etc/named.conf under options
 	 	8.8.8.8; // Or the Organization DNS servers
 	};
 
+	allow-recursion { any; };
+    allow-recursion-on { any; };
+
+
 
 Turn service on and starting the service
 ============================== 	

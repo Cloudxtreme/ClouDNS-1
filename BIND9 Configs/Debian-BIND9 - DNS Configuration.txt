@@ -1,3 +1,5 @@
+Step 1: Create and Install all files
+=========================================
 sudo apt-get install bind9
 
 sudo mkdir /var/log/collector-bind
@@ -11,8 +13,11 @@ sudo chown root:adm /var/log/collector-bind/query.log
 sudo chmod 666 /var/log/collector-bind/debug.log
 sudo chmod 666 /var/log/collector-bind/query.log
 
-Add to /etc/bind/named.conf
 
+Step 2: Edit BIND9 Config files
+=========================================
+Add to /etc/bind/named.conf
+----------------------------
 logging {
 
     channel debug_log {
@@ -38,11 +43,18 @@ logging {
 };
 
 Add to /etc/bind/named.conf.options
+------------------------------------
 	forwarders {
 	 	8.8.8.8; // Or the Organization DNS servers
 	};
 
-	
+	allow-recursion { any; };
+    allow-recursion-on { any; };
+
+
+
+Step 3: Restart BIND9 Service
+===============================
 sudo service bind9 restart
 
 // Ignore

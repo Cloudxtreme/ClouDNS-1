@@ -1,12 +1,11 @@
 __author__ = 'Nimrod Ben-Em'
 from pymongo import MongoClient
-#import logging
+import logging
 
 
 class CMongoConnector(object):
-    def __init__(self, logger):
-        self.logger = logger
-        self.logger.debug('Init MongoConnector Class')
+    def __init__(self):
+        logging.debug('Init MongoConnector Class')
         self.mongo_client = None
         self.db = None
         self.db_collection = None
@@ -14,39 +13,41 @@ class CMongoConnector(object):
 
     def init_connection(self, ip, port, user=None, password=None):
         # connect to DB server
-        self.logger.debug('Connect to MongoDB at:%s:%s' % (ip, port))
+        print("1")
+        print "2"
+        logging.debug('Connect to MongoDB at:%s:%s' % (ip, port))
         self.mongo_client = MongoClient(ip, port)
         if self.mongo_client is None:
-            self.logger.error('Failed to connect DB Server...')
+            logging.error('Failed to connect DB Server...')
             return False
 
         #Authenticate to Server
         if (user is not None) and (password is not None):
-            self.logger.debug('Authenticating...')
+            logging.debug('Authenticating...')
             auth_succeeded = self.mongo_client.ClouDNS.authenticate(user, password)
             if auth_succeeded is False:
-                self.logger.error('Authentication Failed...')
+                logging.error('Authentication Failed...')
                 return False
 
         # Select ClouDNS DB
-        self.logger.debug('Get ClouDNS DB...')
+        logging.debug('Get ClouDNS DB...')
         self.db = self.mongo_client['ClouDNS']
         if self.db is None:
-            self.logger.error('Failed to get DB ClouDNS')
+            logging.error('Failed to get DB ClouDNS')
             return False
 
         # Select DNS Queries Collection
-        self.logger.debug('Get ClouDNS_Queries Collection...')
+        logging.debug('Get ClouDNS_Queries Collection...')
         self.db_collection = self.db['ClouDNS_Queries']
         if self.db_collection is None:
-            self.logger.error('Failed to get DB Collection ClouDNS_Queries')
+            logging.error('Failed to get DB Collection ClouDNS_Queries')
             return False
 
         self.connection_status = True
         return self.connection_status
 
     def insert_dns_query(self, dns_query):
-        self.logger.debug('Inserting: %s' % dns_query)
+        logging.debug('Inserting: %s' % dns_query)
         query_id = self.db_collection.insert(dns_query)
         return query_id
 
